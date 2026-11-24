@@ -15,7 +15,7 @@ Open `index.html` in a browser to play. It loads three.js and cannon-es from a C
 | Left click | Use the weapon in your hand |
 | 1 – 5, Q, mouse wheel | Grabber, Pistol, Machete, Sticky bomb, Cannon |
 | F or right click | Throw what the grabber is holding |
-| V | Switch between third and first person |
+| V | Switch between first person (default) and third person |
 | N / B | Spawn a dummy / a brute |
 | T | Slow motion |
 | C | Mop up blood, debris and corpses |

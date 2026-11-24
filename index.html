@@ -442,7 +442,7 @@ body.touch-ui .touchonly { display: block; }
       <dt>Click</dt><dd>Use the weapon in your hand</dd>
       <dt>1–5, Q, wheel</dt><dd>Switch weapon</dd>
       <dt>F, right click</dt><dd>Throw what the grabber holds</dd>
-      <dt>V</dt><dd>First or third person</dd>
+      <dt>V</dt><dd>Switch to third person and back</dd>
       <dt>N, B</dt><dd>Spawn a dummy or a brute</dd>
       <dt>Esc</dt><dd>Free the mouse</dd>
     </dl>
@@ -708,7 +708,7 @@ const pPos = new Float32Array(MAXP * 3), pVel = new Float32Array(MAXP * 3);
 const pLife = new Float32Array(MAXP), pSize = new Float32Array(MAXP);
 let pCount = 0;
 const pMesh = new THREE.InstancedMesh(
-  new THREE.BoxGeometry(1.6, 1.6, 1.6),
+  new THREE.BoxGeometry(1.15, 1.15, 1.15),
   new THREE.MeshStandardMaterial({ color: 0x8a0812, roughness: 0.3, metalness: 0.1 }),
   MAXP);
 pMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -786,8 +786,11 @@ function updateParticles(dt) {
     }
   }
   const m = pMesh.instanceMatrix.array;
+  const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
   for (let i = 0; i < pCount; i++) {
-    const s = pSize[i], o = i * 3, k = i * 16;
+    const o = i * 3, k = i * 16;
+    const ddx = pPos[o] - cx, ddy = pPos[o + 1] - cy, ddz = pPos[o + 2] - cz;
+    const s = ddx * ddx + ddy * ddy + ddz * ddz < 0.8 ? 0 : pSize[i]; // drops right at the lens would fill the screen
     m[k] = s; m[k + 1] = 0; m[k + 2] = 0; m[k + 3] = 0;
     m[k + 4] = 0; m[k + 5] = s; m[k + 6] = 0; m[k + 7] = 0;
     m[k + 8] = 0; m[k + 9] = 0; m[k + 10] = s; m[k + 11] = 0;
@@ -1473,7 +1476,7 @@ function checkTears() {
 // ================================================================ player
 const player = {
   body: null, yaw: PI, pitch: -0.12, hp: 100, alive: true, deadT: 0, regenT: 0, invuln: 0,
-  view: 'third', phase: 0, moveAmt: 0, speedNow: 0, grounded: false, jumpCD: 0,
+  view: 'first', phase: 0, moveAmt: 0, speedNow: 0, grounded: false, jumpCD: 0,
   weapon: 'pistol', fireCD: 0, swingT: -1, throwT: -1, recoil: 0, fk: makeFK(), meshes: {},
 };
 {
@@ -1672,6 +1675,16 @@ const MUZZLE = { grab: [0, 0, -0.24], pistol: [0, 0.035, -0.2], machete: [0, 0, 
   weaponModels.cannon = g;
 }
 for (const k of WEAPONS) { weaponModels[k].visible = false; weaponRoot.add(weaponModels[k]); }
+// first-person arm holding the weapon
+const fpArm = new THREE.Group();
+{
+  const sleeve = new THREE.MeshStandardMaterial({ color: 0x323b48, roughness: 0.7 });
+  const cuff = new THREE.MeshStandardMaterial({ color: 0xe0742a, roughness: 0.6 });
+  addChildBox(fpArm, darkMat, 0.095, 0.1, 0.11, 0, -0.07, 0.05);
+  addChildBox(fpArm, sleeve, 0.1, 0.1, 0.34, 0.02, -0.1, 0.27);
+  addChildBox(fpArm, cuff, 0.11, 0.11, 0.05, 0.02, -0.1, 0.12);
+  weaponRoot.add(fpArm);
+}
 
 const toolButtons = [...document.querySelectorAll('.tool')];
 const tWeapon = document.getElementById('t-weapon');
@@ -1696,7 +1709,7 @@ toolButtons.forEach((b) => b.addEventListener('click', () => { initAudio(); setW
 const _wq2 = new THREE.Quaternion();
 const _we = new THREE.Euler();
 const HAND_FIX = new THREE.Quaternion().setFromEuler(new THREE.Euler(-PI / 2, 0, PI));
-const FP_OFFSET = { grab: [0.3, -0.3, -0.62], pistol: [0.2, -0.2, -0.42], machete: [0.26, -0.26, -0.42], bomb: [0.26, -0.26, -0.5], cannon: [0.28, -0.26, -0.4] };
+const FP_OFFSET = { grab: [0.3, -0.3, -0.72], pistol: [0.22, -0.21, -0.58], machete: [0.28, -0.28, -0.58], bomb: [0.28, -0.27, -0.62], cannon: [0.3, -0.28, -0.58] };
 function placeWeapon() {
   weaponRoot.visible = player.alive;
   if (!player.alive) return;
@@ -1713,6 +1726,7 @@ function placeWeapon() {
   }
   _we.x += player.recoil * 0.5;
   _wq2.setFromEuler(_we);
+  fpArm.visible = player.view === 'first';
   if (player.view === 'first') {
     const o = FP_OFFSET[w];
     weaponRoot.position.set(o[0], o[1], o[2] + player.recoil * 0.08).applyQuaternion(camera.quaternion).add(camera.position);
@@ -2089,6 +2103,7 @@ function updateCamera() {
   const p = player.body.position;
   if (player.view === 'first' && player.alive) {
     camera.position.set(p.x, p.y + 0.78, p.z).addScaledVector(aimDir, 0.12);
+    if (!reduceMotion) camera.position.y += Math.sin(player.phase * 2) * 0.035 * player.moveAmt;
     camBack = 0;
   } else {
     _pivot.set(p.x, p.y + 0.72, p.z);
