@@ -302,10 +302,10 @@ const BEAST = {
     // smash trees in the way
     if (BEAST.speed > 3) {
       let n = 0;
-      OBST.query(BEAST.pos.x + fx * 3, BEAST.pos.z + fz * 3, 5.5, (o) => {
+      OBST.query(BEAST.pos.x + fx * 3, BEAST.pos.z + fz * 3, 7, (o) => {
         if (n > 3 || o.type !== 'tree') return;
         const d = Math.hypot(o.x - (BEAST.pos.x + fx * 3), o.z - (BEAST.pos.z + fz * 3));
-        if (d < 4.2 + o.r) { if (FLORA.fell(o, BEAST.pos.x - fx * 2, BEAST.pos.z - fz * 2, 1 + BEAST.speed / 25)) n++; }
+        if (d < 5.4 + o.r) { if (FLORA.fell(o, BEAST.pos.x - fx * 2, BEAST.pos.z - fz * 2, 1 + BEAST.speed / 25)) n++; }
       });
     }
 

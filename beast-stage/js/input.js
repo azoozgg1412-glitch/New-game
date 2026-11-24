@@ -41,6 +41,20 @@ const INPUT = {
     });
   };
 
+  // controller rumble / phone vibration for impacts, landings and the beast's footsteps
+  INPUT.rumble = function (strong, weak, ms) {
+    try {
+      if (INPUT.device === 'gamepad' && navigator.getGamepads) {
+        for (const p of navigator.getGamepads()) {
+          if (p && p.vibrationActuator && p.vibrationActuator.playEffect) {
+            p.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: clamp(strong, 0, 1), weakMagnitude: clamp(weak, 0, 1) });
+            break;
+          }
+        }
+      } else if (INPUT.device === 'touch' && navigator.vibrate && strong > 0.35) navigator.vibrate(Math.min(ms, 120));
+    } catch (e) { /* not supported */ }
+  };
+
   INPUT.consume = function (a) { if (INPUT.actions.has(a)) { INPUT.actions.delete(a); return true; } return false; };
   INPUT.clearActions = function () { INPUT.actions.clear(); };
 

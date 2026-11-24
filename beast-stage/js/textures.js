@@ -170,9 +170,17 @@ function buildMaterialTextures(quality) {
 
   // palm trunk: rings
   TEX.palmBark = genTex(256, (u, v, o) => {
-    const ring = Math.abs(Math.sin(v * PI * 18 + pn(u * 8, v * 8, 8) * 1.5));
-    const f = pn2(u * 32, v * 4, 32);
-    mixc(o, [86, 74, 58], [150, 132, 104], smoothstep(0.1, 0.6, ring) * 0.8 + f * 0.2);
+    // leaf-scar rings: mostly straight, slightly irregular, with vertical fibres between
+    const warp = pn(u * 4, v * 6, 4) * 0.35;
+    const ringPhase = (v * 16 + warp) % 1;
+    const scar = smoothstep(0.0, 0.06, ringPhase) * smoothstep(0.2, 0.08, ringPhase);
+    const fib = pn2(u * 64, v * 6, 64) * 0.6 + pn(u * 128, v * 24, 128) * 0.4;
+    const tone = periodicFbm(pn, u * 2, v * 3, 2, 3);
+    mixc(o, [118, 104, 84], [152, 138, 112], tone);
+    const k = 0.82 + fib * 0.3 - scar * 0.38;
+    o[0] *= k; o[1] *= k; o[2] *= k;
+    const lichen = smoothstep(0.6, 0.72, periodicFbm(pn2, u * 6 + 3, v * 6, 6, 3));
+    mixc(o, o, [150, 150, 128], lichen * 0.5);
   });
 
   // temple stone blocks with moss

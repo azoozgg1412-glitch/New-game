@@ -214,7 +214,7 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
   BS.start = function (mode) {
     userGesture();
     GAME.mode = mode; GAME.lastMode = mode;
-    Object.assign(GAME, { time: 0, distance: 0, score: 0, checkpoints: 0, flares: mode === 'escape' ? 1 : 0, started: false, over: false, paused: false, countdown: mode === 'escape' ? 3.2 : 0, danger: 0, hitFlash: 0, shake: 0 });
+    Object.assign(GAME, { time: 0, distance: 0, score: 0, checkpoints: 0, flares: mode === 'escape' ? 1 : 0, started: false, over: false, paused: false, countdown: mode === 'escape' ? 3.2 : 0, danger: 0, hitFlash: 0, shake: 0, graceT: 0 });
     if (mode !== 'escape') GAME.started = true;
     GAME.stats = { topSpeed: 0, bestAir: 0, drifts: 0, hits: 0 };
     GAME.cpPassed = new Map();
@@ -261,7 +261,8 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
 
   // ------------------------------------------------ beast interactions
   GAME.beastHit = function (fx, fz) {
-    if (GAME.over) return;
+    if (GAME.over || GAME.graceT > 0) return;
+    GAME.graceT = 2.5; // a moment to get away before it can hurt you again
     const side = Math.random() < 0.5 ? -1 : 1;
     const J = new THREE.Vector3(fx * 8 - fz * side * 3, 7.5, fz * 8 + fx * side * 3).multiplyScalar(car.mass);
     const pt = car.pos.clone().add(new THREE.Vector3(frand(-0.6, 0.6), 0.4, frand(-1, 1)));
@@ -273,6 +274,7 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
     GAME.shake = Math.max(GAME.shake, 1.4);
     GAME.hitFlash = 0.6;
     HUD.center('HIT!', 'bad');
+    INPUT.rumble(1, 1, 450);
     AUDIO.play('impact', { vol: 1.3 });
     const local = car.pos.clone();
     dentAt(car.pos.clone().add(new THREE.Vector3(-fx, 0.5, -fz).multiplyScalar(1.2)), new THREE.Vector3(fx, 0, fz), 0.14);
@@ -420,6 +422,7 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
       if (noteTick <= 0) { HUD.updateNotes(car); noteTick = 0.12; }
     }
     GAME.hitFlash = Math.max(0, GAME.hitFlash - dt * 1.5);
+    if (GAME.graceT > 0) GAME.graceT -= dt;
     if (GAME.over) {
       overT += dt;
       if (overT > 2.2 && $('over').hidden) { $('over').hidden = false; $('hud').hidden = true; }
@@ -459,6 +462,7 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
         case 'land':
           if (e.air > 0.4) {
             AUDIO.play('land', { vol: clamp(e.v / 8, 0.2, 1.2) });
+            INPUT.rumble(clamp(e.v / 10, 0.2, 1), 0.5, 180);
             GAME.shake = Math.max(GAME.shake, clamp(e.v / 14, 0, 0.6));
             for (const w of car.wheels) FX.burst(w.road > 0.5 ? 'dust' : 'dustDark', w.cp.x, w.cp.y, w.cp.z, 3, 2, 1.5, 1.2);
             if (playing && GAME.mode === 'escape' && e.air > 0.7 && !GAME.over && GAME.started) {
@@ -473,11 +477,12 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
           const v = e.v;
           if (v > 3.5) {
             AUDIO.play(e.kind === 'ground' ? 'land' : 'impact', { vol: clamp((v - 3) / 10, 0.15, 1.2) });
+            INPUT.rumble(clamp(v / 15, 0.15, 1), clamp(v / 10, 0.2, 1), 160);
             if (e.kind !== 'ground') FX.burst('spark', e.point.x, e.point.y, e.point.z, Math.min(14, Math.floor(v)), 2, 2);
             if (e.obst && e.obst.type === 'tree') FX.burst('leaf', e.point.x, e.point.y + 4, e.point.z, Math.min(16, Math.floor(v)), 2, 1, 1);
             if (playing && !GAME.over && v > 5) {
-              const dmg = (v - 5) * (e.kind === 'ground' ? 0.7 : 1.7);
-              car.health -= dmg;
+              const dmg = Math.max(0, v - (e.kind === 'ground' ? 7 : 6)) * (e.kind === 'ground' ? 0.5 : 1.3);
+              if (GAME.mode === 'escape') car.health -= dmg;
               dentAt(e.point, e.normal.clone(), Math.min(0.12, (v - 5) * 0.01));
               GAME.shake = Math.max(GAME.shake, clamp(v / 20, 0.1, 0.8));
               if (v > 16 && model.parts.wing.parent === model.root && Math.random() < 0.35) detachWing(e.normal.clone().multiplyScalar(car.mass * 4));
@@ -490,7 +495,7 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
           FX.burst('chip', e.point.x, e.point.y + 0.5, e.point.z, 12, 3, 4);
           FX.burst('leaf', e.point.x, e.point.y + 6, e.point.z, 20, 3, 1);
           GAME.shake = Math.max(GAME.shake, 0.4);
-          if (playing && !GAME.over) { car.health -= 4; if (GAME.mode === 'escape') { GAME.score += 50; HUD.toast('TIMBER! +50', 'good', 1); } }
+          if (playing && !GAME.over && GAME.mode === 'escape') { car.health -= 3; GAME.score += 50; HUD.toast('TIMBER! +50', 'good', 1); }
           break;
         }
       }
@@ -531,6 +536,7 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
     for (const e of BEAST.events) {
       if (e.type === 'step') {
         if (GAME.mode !== 'menu' || d < 80) AUDIO.play('step', { vol: vol * 0.9, pan });
+        if (GAME.mode !== 'menu' && d < 70) INPUT.rumble(clamp(0.8 - d / 90, 0, 0.8), 0.1, 120);
         GAME.shake = Math.max(GAME.shake, clamp(0.55 - d / 90, 0, 0.55));
         const fx = Math.sin(BEAST.yaw), fz = Math.cos(BEAST.yaw);
         const off = e.front ? 4 : -2.5;
@@ -636,11 +642,15 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
         car.pos.addScaledVector(n, 5.2 - cd);
         if (rel < 0) {
           car.applyImpulse(n.clone().multiplyScalar(-rel * 1.4 * car.mass), car.pos);
-          if (-rel > 6 && !GAME.over) { car.health -= (-rel - 6) * 1.4; AUDIO.play('impact', { vol: 0.9 }); GAME.shake = Math.max(GAME.shake, 0.7); }
+          if (-rel > 6 && !GAME.over) {
+            if (!(GAME.graceT > 0)) { car.health -= (-rel - 6) * 1.0; GAME.graceT = 1.2; }
+            AUDIO.play('impact', { vol: 0.9 }); GAME.shake = Math.max(GAME.shake, 0.7);
+          }
         }
       }
       if (GAME.started && !GAME.over) {
-        if (d < 10 && sp < 6) caughtT += dt; else caughtT = Math.max(0, caughtT - dt * 2);
+        const hunting = BEAST.state === 'chase' || BEAST.state === 'attack';
+        if (d < 10 && sp < 6 && hunting) caughtT += dt; else caughtT = Math.max(0, caughtT - dt * 2);
         if (caughtT > 1.4) {
           HUD.center('CAUGHT', 'bad');
           BEAST.state = 'attack'; BEAST.stateT = 0; BEAST.hitDone = false;

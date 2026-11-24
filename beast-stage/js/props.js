@@ -207,8 +207,8 @@ const PROPS = { checkpoints: [], start: null, braziers: [] };
       const n = loop.pts.length;
       const spacing = 560;
       const count = Math.floor(loop.length / spacing);
-      const bannerMat = new THREE.MeshStandardMaterial({ map: bannerTexture('CHECKPOINT', '#f0bf2c', '#141414'), roughness: 0.6, side: THREE.DoubleSide });
-      const startMat = new THREE.MeshStandardMaterial({ map: bannerTexture('BEAST STAGE · START', '#141414', '#f0bf2c'), roughness: 0.6, side: THREE.DoubleSide });
+      const bannerMat = new THREE.MeshStandardMaterial({ map: bannerTexture('CHECKPOINT', '#f0bf2c', '#141414'), roughness: 0.6 });
+      const startMat = new THREE.MeshStandardMaterial({ map: bannerTexture('BEAST STAGE · START', '#141414', '#f0bf2c'), roughness: 0.6 });
       const pillarMat = new THREE.MeshStandardMaterial({ color: 0xe8611a, roughness: 0.55 });
       const group = new THREE.Group();
       for (let c = 0; c <= count - 1; c++) {
@@ -227,7 +227,13 @@ const PROPS = { checkpoints: [], start: null, braziers: [] };
           OBST.add({ type: 'post', x, z, y: b, r: 0.5, h: 6.5 });
           PROPS_KEEPOUT.push({ x, z, r: 2.5 });
         }
-        const ban = new THREE.Mesh(new THREE.PlaneGeometry(off * 2, 1.25), c === 0 ? startMat : bannerMat);
+        // two single-sided faces so the text reads correctly from both directions
+        const ban = new THREE.Group();
+        for (const face of [0, PI]) {
+          const m = new THREE.Mesh(new THREE.PlaneGeometry(off * 2, 1.25), c === 0 ? startMat : bannerMat);
+          m.rotation.y = face; m.position.z = face ? -0.02 : 0.02;
+          ban.add(m);
+        }
         ban.position.set(p.x, p.h + 5.6, p.z);
         ban.rotation.y = yaw;
         g.add(ban);
