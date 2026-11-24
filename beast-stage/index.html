@@ -371,7 +371,7 @@ button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
       var s = document.createElement('script');
       s.src = 'js/' + f + '.js';
       s.onload = res;
-      s.onerror = function () { rej(new Error('Could not load js/' + f + '.js')); };
+      s.onerror = function () { rej(new Error('Could not load js/' + f + '.js. This page needs its js folder next to it. To play from a single file, open beast-stage-single.html instead.')); };
       document.body.appendChild(s);
     });
   }
