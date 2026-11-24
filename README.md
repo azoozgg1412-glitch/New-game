@@ -1,8 +1,9 @@
 # New Game
 
-Two browser games live in this repository:
+Three browser games live in this repository:
 
 - **[Beast Stage](beast-stage/)** — a jungle rally game with a monster chasing you. Open `beast-stage/index.html`. See [beast-stage/README.md](beast-stage/README.md).
+- **[Jungle Dash](jungle-dash/)** — a quick endless runner: dodge, jump, outrun the beast. Open `jungle-dash/jungle-dash.html` (one file, works offline).
 - **Dummy Pit** — the ragdoll sandbox described below. Open `index.html`.
 
 ## Dummy Pit
