@@ -30,6 +30,7 @@ Beast difficulty (Easy, Normal, Hard), driving assists (Full, Light, Off) and gr
 | V | Co-driver voice on/off |
 | M | Sound on/off |
 | Esc / P | Pause |
+| ⛶ button (or F11) | Full screen — the button is under the minimap, on the title screen and in the pause menu |
 
 Gamepad: right trigger throttle, left trigger brake, left stick steer, A handbrake, X nitro, B flare, Y camera, LB look back, RB / D-pad shift, Back reset, Start pause.
 

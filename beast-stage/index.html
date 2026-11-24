@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Beast Stage</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="description" content="A jungle rally game. Drive a detailed rally car through a 2 km jungle while a giant beast chases you.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -161,6 +164,9 @@ button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
 @keyframes tin { from { opacity: 0; transform: translateY(10px) scale(0.9); } }
 #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 9; opacity: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(150,10,0,0.55) 85%, rgba(90,0,0,0.85) 100%); }
 .hud-btns { display: flex; gap: 6px; pointer-events: auto; }
+.full-btn { pointer-events: auto; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 4px; background: var(--panel); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.full-btn:hover { background: rgba(40,44,36,0.92); }
+.full-btn .fi { font-size: 16px; line-height: 1; color: var(--hazard); }
 .hud-btns button { padding: 5px 10px; border: 0; border-radius: 3px; background: var(--panel); font-size: 13px; font-weight: 600; letter-spacing: 0.06em; }
 
 /* ------------------------------------------------ overlays */
@@ -212,6 +218,9 @@ button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
 .touch-ui #notes { top: auto; bottom: 150px; left: 50%; transform: translateX(-50%) scale(0.8); transform-origin: bottom center; }
 .touch-ui .note:not(.first) { display: none; }
 .touch-ui .hud-btns { display: none; }
+.touch-ui .full-btn { padding: 6px 9px; }
+.touch-ui .full-btn .fl { display: none; }
+.touch-ui .full-btn .fi { font-size: 18px; }
 .touch-ui #toasts { top: 36%; }
 .touch-ui .toast { font-size: 18px; }
 
@@ -278,7 +287,7 @@ button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
   <div class="menu-foot">
     <button class="chip" id="btnSound">Sound: on</button>
     <button class="chip" id="btnVoice">Co-driver: on</button>
-    <button class="chip" id="btnFull">Full screen</button>
+    <button class="chip js-full" id="btnFull">⛶ Full screen</button>
     <span class="best">Best <b id="bestScore">—</b></span>
   </div>
 </section>
@@ -292,13 +301,12 @@ button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
       <dt>Distance</dt><dd id="hDist">0.00 km</dd>
       <dt>Checkpoints</dt><dd id="hCp">0</dd>
     </dl>
-    <div class="hud-btns"><button id="btnFull2">Full screen</button></div>
   </div>
   <div id="beastMeter">
     <div class="bm-row"><span>The beast</span><b id="bmDist">— m</b></div>
     <div class="bm-track"><i id="bmFill"></i></div>
   </div>
-  <div class="tr"><canvas id="minimap" width="180" height="180"></canvas></div>
+  <div class="tr"><canvas id="minimap" width="180" height="180"></canvas><button class="full-btn js-full" id="btnFull2" aria-label="Full screen"><span class="fi">⛶</span><span class="fl">Full screen</span></button></div>
   <div id="notes"></div>
   <div id="toasts"></div>
   <div id="center" class="center"></div>
@@ -327,6 +335,7 @@ button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
     <p>The beast is waiting too.</p>
     <div class="row"><button class="btn-big" id="btnResume">Resume</button></div>
     <div class="row"><button class="btn-big alt" id="btnRestart">Restart</button><button class="btn-big alt" id="btnMenu">Menu</button></div>
+    <div class="row"><button class="btn-big alt js-full" id="btnFull3">⛶ Full screen</button></div>
   </div>
 </div>
 

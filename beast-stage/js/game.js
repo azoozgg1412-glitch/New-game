@@ -151,8 +151,9 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
     $('btnMenu').addEventListener('click', () => { setPause(false); showMenu(); });
     $('btnAgain').addEventListener('click', () => BS.start(GAME.lastMode || 'escape'));
     $('btnOverMenu').addEventListener('click', showMenu);
-    $('btnFull').addEventListener('click', toggleFull);
-    $('btnFull2').addEventListener('click', toggleFull);
+    document.querySelectorAll('.js-full').forEach((el) => el.addEventListener('click', (e) => { e.stopPropagation(); toggleFull(); el.blur(); }));
+    for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, syncFull);
+    syncFull();
     $('btnSound').addEventListener('click', () => { userGesture(); AUDIO.setOn(!AUDIO.on); syncToggles(); });
     $('btnVoice').addEventListener('click', () => { HUD.voice = !HUD.voice; safeStore('bs-voice', HUD.voice ? '1' : '0'); if (!HUD.voice && window.speechSynthesis) speechSynthesis.cancel(); syncToggles(); });
     $('bestScore').textContent = GAME.best ? String(GAME.best) : '—';
@@ -164,11 +165,36 @@ const CAM_MODES = ['chase', 'far', 'hood', 'cockpit', 'bumper'];
     $('btnSound').textContent = AUDIO.on ? 'Sound: on' : 'Sound: off';
     $('btnVoice').textContent = HUD.voice ? 'Co-driver: on' : 'Co-driver: off';
   }
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const fsSupported = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
   function toggleFull() {
-    const d = document;
-    if (!d.fullscreenElement) (d.documentElement.requestFullscreen || d.documentElement.webkitRequestFullscreen || (() => {})).call(d.documentElement);
-    else (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+    userGesture();
+    const de = document.documentElement;
+    if (!fsSupported()) {
+      HUD.toast(/iP(hone|od)/.test(navigator.userAgent) ? 'iPhone: tap Share, then Add to Home Screen to play full screen' : 'This browser does not allow full screen', 'info', 3.5);
+      return;
+    }
+    if (!fsEl()) {
+      const req = de.requestFullscreen ? de.requestFullscreen({ navigationUI: 'hide' }) : de.webkitRequestFullscreen();
+      Promise.resolve(req).then(() => {
+        // phones: stay sideways while playing
+        try { if (screen.orientation && screen.orientation.lock && matchMedia('(pointer: coarse)').matches) screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* not allowed */ }
+      }).catch(() => HUD.toast('Full screen was blocked by the browser', 'info', 2));
+    } else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   }
+  function syncFull() {
+    const on = !!fsEl();
+    document.querySelectorAll('.js-full').forEach((el) => {
+      const label = on ? 'Exit full screen' : 'Full screen';
+      el.setAttribute('aria-label', label);
+      const fl = el.querySelector('.fl');
+      if (fl) fl.textContent = label; else el.textContent = (on ? '✕ ' : '⛶ ') + label;
+      const fi = el.querySelector('.fi');
+      if (fi) fi.textContent = on ? '✕' : '⛶';
+    });
+    setTimeout(onResize, 60);
+  }
+  BS.toggleFull = toggleFull;
   function userGesture() { AUDIO.init(); }
   BS.userGesture = userGesture;
 
