@@ -1,10 +1,17 @@
-# Dummy Pit
+# New Game
+
+Two browser games live in this repository:
+
+- **[Beast Stage](beast-stage/)** — a jungle rally game with a monster chasing you. Open `beast-stage/index.html`. See [beast-stage/README.md](beast-stage/README.md).
+- **Dummy Pit** — the ragdoll sandbox described below. Open `index.html`.
+
+## Dummy Pit
 
 A blocky 3D ragdoll gore game that runs in the browser. You walk around a crash-test bay with five weapons. Yellow dummies wander and run away when things get loud. Red brutes chase you and punch.
 
 Open `index.html` in a browser to play. It loads three.js and cannon-es from a CDN, so it needs an internet connection.
 
-## Controls
+### Controls
 
 | Input | Action |
 | --- | --- |
@@ -26,14 +33,14 @@ On a phone or tablet, the left thumb walks and the right thumb aims. Fire, jump,
 
 There is a Full screen button on the start card and in the control bar.
 
-## Dummy AI
+### Dummy AI
 
 - **Dummies (yellow)** wander between random spots. Gunfire, explosions or injuries send them running with their arms flailing.
 - **Brutes (red)** chase you when you get close, or when you hurt them, and punch for 13 damage. Your health comes back after a few seconds without getting hit.
 - Leg shots, headshots, explosions, cannonballs, thrown bodies and the grabber knock them down. They get back up if both legs, the torso and the head are still attached. Otherwise they stay down and writhe.
 - A dummy dies when it loses its head or torso, or bleeds out from open wounds.
 
-## How the gore works
+### How the gore works
 
 - Each body part has its own health, and damage tints it red.
 - When a part runs out of health its joint breaks: a blood-red stump with a bone shows, and both ends keep pumping blood for a few seconds.
