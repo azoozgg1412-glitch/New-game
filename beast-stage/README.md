@@ -2,7 +2,9 @@
 
 A jungle rally game that runs in the browser. You drive a detailed rally car down a gravel stage through a 2 km × 2 km jungle while a giant beast follows your dust. Hit checkpoints, earn nitro from drifts and jumps, drop flares to stun it, and never stop moving.
 
-Open `beast-stage/index.html` in a browser to play (Chrome, Edge, Firefox or Safari with WebGL 2). It loads three.js from a CDN, so it needs an internet connection the first time. The game files are plain scripts, so it also works when opened straight from disk.
+**Easiest:** download `beast-stage/beast-stage-single.html` and double-click it. That one file has everything, including the 3D engine, and plays offline.
+
+Or open `beast-stage/index.html` in a browser to play (Chrome, Edge, Firefox or Safari with WebGL 2). It loads three.js from a CDN, so it needs an internet connection the first time. The game files are plain scripts, so it also works when opened straight from disk.
 
 ## Modes
 
@@ -53,6 +55,7 @@ On a phone or tablet, on-screen buttons appear: steering on the left, gas, brake
 
 ## Files
 
+- `beast-stage-single.html` — the whole game in one file (built by `build-single.py`)
 - `index.html` — page, HUD, menus and the loader
 - `js/util.js` — math, noise, geometry helpers
 - `js/textures.js` — procedural terrain, bark, stone, skin and foliage textures
