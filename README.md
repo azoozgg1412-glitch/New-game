@@ -4,7 +4,7 @@ A blocky 3D ragdoll gore game that runs in the browser. You walk around a crash-
 
 Open `index.html` in a browser to play. It loads three.js and cannon-es from a CDN, so it needs an internet connection.
 
-The repo also has a second game, [Crumple Zone](#crumple-zone) (`crash.html`), a soft-body car crash test facility.
+The repo also has two more games: [Crumple Zone](#crumple-zone) (`crash.html`), a soft-body car crash test facility, and [Lanternfall](#lanternfall) (`lanternfall.html`), a top-down wave survival roguelite.
 
 ## Controls
 
@@ -98,3 +98,39 @@ Pick a speed from 20 to 200 km/h in Tests. The car is launched at that speed and
 On a phone, the left thumb steers with the arrow pads, and the right thumb uses Gas, Brake and Hand. The Full screen button is on the start card and in the top bar. iPhone Safari has no full screen for web pages, so add the page to the Home Screen instead.
 
 Graphics quality (Low, Medium, High) is in Tests. The resolution also scales down by itself if the frame rate drops.
+
+# Lanternfall
+
+`lanternfall.html` is a 2D top-down wave survival game for phones and desktop browsers. It needs no libraries: the game draws all its art in code and renders it with WebGL 2.
+
+You carry a lantern through four arenas. Enemies come in waves. Your weapons fire on their own, and each kill drops a soul shard. Fill the bar to level up and pick one of three cards. At 8:00 the stage boss arrives; beat it to clear the stage and unlock the next one.
+
+## Cards
+
+There are over 200 different cards, so no two runs build the same way:
+
+- **19 weapons**, each with five levels. Arc Bolt, Whirling Blades, Flame Breath, Hallowed Aura, Chain Lightning, Frost Nova, Bone Boomerang, Meteor Call, Caltrops, Seeker Wisps, Sunbeam, Toxic Flask, Scatter Shards, Ricochet Saw, Thunder Call, Quake Hammer, Void Rift, Guardian Drone, Bone Lance.
+- **19 evolutions**. A level 5 weapon plus its matching passive offers a legendary evolution card, for example Arc Bolt and Quickening make Storm Lance, and Flame Breath and Ember Heart make Inferno Gale. Treasure chests from elites always give an evolution if one is ready.
+- **26 passives** with up to five levels each: damage, cooldown, area, speed, crits, luck, freeze, burn and poison chances, thorns, lifesteal, dodge, a recharging shield, and more.
+- **21 relics**, one copy each, that change how a run plays: Glass Cannon, Chain Reaction, Echo Charm, Four-Leaf Charm (choose from four cards), Phoenix Feather, Shatterglass, Wildfire and others.
+
+You hold up to six weapons and six passives. Rarer cards (rare, epic, legendary) show up more with luck. Rerolls and skips are on the card screen.
+
+## Stages
+
+| Stage | Enemies | Boss |
+| --- | --- | --- |
+| Mossgrave Ruins | slimes that split, bats, skeletons, spore mushrooms, moss golems | Thornback Colossus: charges, thorn rings, summons slimes |
+| Cinder Wastes | fire imps, ash wraiths that teleport, suicide beetles, charging crawlers, knights | Cinder Wyrm: a segmented snake that spits fire |
+| Hoarfrost Crypt | ghouls, ice spiders, frost wisps, crystal turrets, yetis | Hoarfrost Lich: teleports, bullet spirals, raises ghouls |
+| Void Sanctum | shades, gazers, phase stalkers, splitting orbs, abyssal brutes | The Many-Eyed: orbiting eyes, spirals, bullet rings |
+
+Elites glow gold and drop chests. Surround waves and brutes arrive at set times.
+
+## Heroes and the camp
+
+Five heroes start with different weapons: Lantern Keeper (Arc Bolt), Blade Dancer (Whirling Blades), Pyromancer (Flame Breath), Iron Warden (Hallowed Aura) and Hexweaver (Toxic Flask). Gold you collect is banked even if you die. Spend it at the Camp on permanent upgrades such as damage, HP, speed, rerolls and an extra revive.
+
+## Controls
+
+On a phone, drag anywhere with your thumb to move; a joystick appears under it. On a desktop, use WASD or the arrow keys. Press P or Esc to pause, 1 – 4 to pick a card, R to reroll and F for full screen. The full screen button is on the main menu and in the top bar.
