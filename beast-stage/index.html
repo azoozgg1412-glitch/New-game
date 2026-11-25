@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Beast Stage</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="A jungle rally game. Drive a detailed rally car through a 2 km jungle while a giant beast chases you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: full-bleed 3D view; rally-timing-sheet HUD pinned to the corners. Single dark look by choice (it sits over a 3D scene). */
+:root {
+  --ink: #f2efe6;
+  --dim: #a6a99c;
+  --panel: rgba(14, 17, 13, 0.82);
+  --panel-solid: #121510;
+  --line: rgba(240, 191, 44, 0.28);
+  --hazard: #f0bf2c;
+  --orange: #ff5a12;
+  --teal: #2fc4b2;
+  --bad: #ff3c1e;
+  --good: #9be15d;
+  --f-display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: #0b0d0a;
+  color: var(--ink);
+  font-family: var(--f-display);
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ------------------------------------------------ loading */
+#loading {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 60%, #1a2212 0%, #0b0d0a 70%);
+  transition: opacity 0.6s;
+}
+#loading.done { opacity: 0; pointer-events: none; }
+.load-card { width: min(420px, calc(100vw - 32px)); text-align: center; }
+.load-title { font-size: clamp(44px, 10vw, 76px); font-weight: 800; font-style: italic; letter-spacing: 0.02em; line-height: 0.9; }
+.load-title span { color: var(--orange); }
+#loadText { margin-top: 18px; color: var(--dim); font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; min-height: 1.4em; }
+.bar { margin-top: 10px; height: 6px; background: rgba(255,255,255,0.08); overflow: hidden; border-radius: 3px; }
+.bar i { display: block; height: 100%; width: calc(var(--v, 0) * 100%); background: linear-gradient(90deg, var(--hazard), var(--orange)); transition: width 0.2s; }
+
+/* ------------------------------------------------ menu */
+#menu {
+  position: fixed; z-index: 20; top: 0; bottom: 0; left: 0;
+  width: min(460px, 100vw);
+  padding: max(24px, env(safe-area-inset-top)) 28px max(20px, env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left));
+  background: linear-gradient(90deg, rgba(8,10,7,0.94) 0%, rgba(8,10,7,0.86) 70%, rgba(8,10,7,0) 100%);
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 18px;
+}
+.title { margin: 6px 0 0; font-size: clamp(44px, min(13vw, 13vh), 92px); font-weight: 800; font-style: italic; line-height: 0.84; letter-spacing: 0.01em; }
+.title span { color: var(--orange); display: block; }
+.tag { margin: 0; color: var(--dim); font-size: clamp(15px, 2.6vh, 19px); line-height: 1.3; max-width: 34ch; }
+.tag b { color: var(--ink); font-weight: 600; }
+.cta { display: grid; gap: 10px; }
+.btn-big {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; border: 0; border-radius: 4px;
+  background: var(--hazard); color: #15120a;
+  font-size: 26px; font-weight: 800; font-style: italic; letter-spacing: 0.02em; text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+  transition: transform 0.12s, background 0.12s;
+}
+.btn-big small { font-size: 14px; font-weight: 600; font-style: normal; letter-spacing: 0.04em; opacity: 0.75; }
+.btn-big:hover { transform: translateX(4px); background: #ffd04a; }
+.btn-big.alt { background: rgba(255,255,255,0.08); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); }
+.btn-big.alt:hover { background: rgba(255,255,255,0.14); }
+.opt { display: grid; gap: 6px; }
+.opt-label { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.seg { display: flex; gap: 4px; }
+.seg button {
+  flex: 1; padding: 8px 6px; border: 0; border-radius: 3px;
+  background: rgba(255,255,255,0.06); font-size: 17px; font-weight: 600; letter-spacing: 0.04em;
+}
+.seg button:hover { background: rgba(255,255,255,0.12); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #111; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 16px; color: var(--dim); }
+.keys kbd { font-family: var(--f-mono); font-size: 12.5px; color: var(--ink); background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 3px; white-space: nowrap; justify-self: start; }
+.menu-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: auto; }
+.chip { padding: 6px 12px; border: 0; border-radius: 3px; background: rgba(255,255,255,0.07); font-size: 15px; font-weight: 600; }
+.chip:hover { background: rgba(255,255,255,0.14); }
+.best { margin-left: auto; font-size: 15px; color: var(--dim); }
+.best b { font-family: var(--f-mono); color: var(--hazard); font-weight: 600; }
+.touch-ui .keys { display: none; }
+
+/* ------------------------------------------------ HUD */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+.tl { position: absolute; top: max(14px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); display: grid; gap: 6px; }
+.mode { font-size: 13px; letter-spacing: 0.16em; color: var(--hazard); font-weight: 700; }
+.sheet { background: var(--panel); border-left: 3px solid var(--hazard); padding: 8px 12px; display: grid; grid-template-columns: auto auto; gap: 2px 16px; align-items: baseline; }
+.sheet dt { font-size: 12px; letter-spacing: 0.14em; color: var(--dim); text-transform: uppercase; }
+.sheet dd { margin: 0; font-family: var(--f-mono); font-size: 17px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.sheet dd.big { font-size: 22px; color: var(--hazard); }
+.tr { position: absolute; top: max(12px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); display: grid; justify-items: end; gap: 8px; }
+#minimap { width: 180px; height: 180px; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+.br { position: absolute; bottom: max(10px, env(safe-area-inset-bottom)); right: max(10px, env(safe-area-inset-right)); }
+#gauge { width: 220px; height: 220px; display: block; filter: drop-shadow(0 3px 10px rgba(0,0,0,0.5)); }
+.bl { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: max(16px, env(safe-area-inset-left)); display: grid; gap: 8px; width: 240px; }
+.meter { background: var(--panel); padding: 7px 10px 8px; display: grid; gap: 5px; }
+.meter-h { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.14em; color: var(--dim); text-transform: uppercase; }
+.meter-h b { font-family: var(--f-mono); color: var(--ink); font-weight: 600; letter-spacing: 0; }
+.meter .bar { margin: 0; height: 8px; }
+#hHealth i { background: linear-gradient(90deg, var(--bad), var(--hazard) 50%, var(--good)); background-size: calc(100% / max(var(--v, 1), 0.01)) 100%; }
+#hNitro i { background: linear-gradient(90deg, #2b7cff, #7fd6ff); }
+#hNitroWrap.full .meter-h { color: #7fd6ff; }
+#hFlares { display: flex; gap: 6px; }
+#hFlares i { width: 22px; height: 8px; background: #ff3b2f; box-shadow: 0 0 8px rgba(255,59,47,0.7); clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%); }
+#hFlares i.e { background: rgba(255,255,255,0.12); box-shadow: none; }
+#beastMeter { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: min(380px, 46vw); text-align: center; }
+.bm-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; letter-spacing: 0.16em; color: var(--dim); text-transform: uppercase; }
+.bm-row b { font-family: var(--f-mono); font-size: 20px; letter-spacing: 0; color: var(--ink); }
+.bm-track { position: relative; height: 10px; margin-top: 4px; background: rgba(10,12,9,0.75); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12); }
+.bm-track i { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--v, 0) * 100%); background: linear-gradient(90deg, rgba(255,90,18,0.35), var(--bad)); transition: width 0.15s; }
+#beastMeter.hot .bm-row { color: var(--bad); }
+#beastMeter.hot b { color: var(--bad); animation: pulse 0.5s infinite alternate; }
+@keyframes pulse { to { opacity: 0.5; } }
+#notes { position: absolute; left: max(16px, env(safe-area-inset-left)); top: 34%; display: grid; gap: 6px; transition: opacity 0.3s; }
+#notes.dim { opacity: 0.35; }
+.note { display: flex; align-items: center; gap: 10px; background: var(--panel); padding: 5px 12px 5px 8px; min-width: 160px; border-left: 3px solid rgba(255,255,255,0.25); opacity: 0.75; transform-origin: left center; }
+.note.first { opacity: 1; border-left-color: var(--hazard); transform: scale(1.12); margin-bottom: 4px; }
+.note.jump { border-left-color: var(--orange); }
+.note.ford { border-left-color: var(--teal); }
+.ni { width: 34px; height: 34px; color: var(--ink); }
+.note.first .ni { color: var(--hazard); }
+.ni-tag { font-weight: 800; font-style: italic; font-size: 17px; color: var(--orange); min-width: 34px; }
+.note.ford .ni-tag { color: var(--teal); }
+.nt { font-size: 26px; font-weight: 800; font-style: italic; line-height: 1; display: grid; }
+.nt small { font-size: 12px; font-weight: 600; font-style: normal; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.nd { margin-left: auto; font-family: var(--f-mono); font-size: 14px; color: var(--dim); }
+#center {
+  position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%) scale(0.8);
+  font-size: clamp(54px, 12vw, 120px); font-weight: 800; font-style: italic; letter-spacing: 0.02em;
+  opacity: 0; transition: opacity 0.15s, transform 0.25s; text-shadow: 0 4px 24px rgba(0,0,0,0.6); white-space: nowrap;
+}
+#center.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#center.good { color: var(--hazard); }
+#center.bad { color: var(--bad); }
+#center.go { color: var(--good); }
+#toasts { position: absolute; left: 50%; top: 42%; transform: translateX(-50%); display: grid; gap: 6px; justify-items: center; }
+.toast { padding: 6px 16px; background: var(--panel); font-size: 22px; font-weight: 800; font-style: italic; letter-spacing: 0.04em; animation: tin 0.25s ease-out; transition: opacity 0.4s, transform 0.4s; white-space: nowrap; }
+.toast.good { color: var(--hazard); }
+.toast.bad { color: var(--bad); }
+.toast.info { color: var(--ink); font-size: 17px; }
+.toast.out { opacity: 0; transform: translateY(-10px); }
+@keyframes tin { from { opacity: 0; transform: translateY(10px) scale(0.9); } }
+#vignette { position: fixed; inset: 0; pointer-events: none; z-index: 9; opacity: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(150,10,0,0.55) 85%, rgba(90,0,0,0.85) 100%); }
+.hud-btns { display: flex; gap: 6px; pointer-events: auto; }
+.full-btn { pointer-events: auto; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 4px; background: var(--panel); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.full-btn:hover { background: rgba(40,44,36,0.92); }
+.full-btn .fi { font-size: 16px; line-height: 1; color: var(--hazard); }
+.hud-btns button { padding: 5px 10px; border: 0; border-radius: 3px; background: var(--panel); font-size: 13px; font-weight: 600; letter-spacing: 0.06em; }
+
+/* ------------------------------------------------ overlays */
+.overlay { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(6,7,5,0.6); padding: 16px; }
+.card { width: min(440px, 100%); background: var(--panel-solid); border-top: 4px solid var(--hazard); padding: 22px 24px; display: grid; gap: 14px; }
+.card h2 { margin: 0; font-size: 46px; font-weight: 800; font-style: italic; line-height: 0.95; }
+.card p { margin: 0; color: var(--dim); font-size: 18px; line-height: 1.3; }
+#over .card { border-top-color: var(--bad); }
+#over h2 { color: var(--bad); }
+.stats { display: grid; grid-template-columns: 1fr auto; gap: 3px 16px; font-size: 17px; }
+.stats dt { color: var(--dim); }
+.stats dd { margin: 0; font-family: var(--f-mono); font-weight: 600; text-align: right; }
+.stats .tot { font-size: 24px; color: var(--hazard); }
+.card .row { display: flex; gap: 8px; }
+.card .row .btn-big { flex: 1; font-size: 21px; padding: 11px 14px; }
+
+/* ------------------------------------------------ touch */
+#touch { display: none; }
+.touch-ui.playing #touch { display: block; }
+#touch button {
+  position: absolute; pointer-events: auto; border: 0; touch-action: none;
+  background: rgba(14,17,13,0.55); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18);
+  font-weight: 800; font-style: italic; letter-spacing: 0.04em; color: var(--ink);
+  border-radius: 14px;
+}
+#touch button.on { background: rgba(240,191,44,0.45); }
+.t-left, .t-right { bottom: max(18px, env(safe-area-inset-bottom)); width: 86px; height: 86px; font-size: 34px; }
+.t-left { left: max(14px, env(safe-area-inset-left)); }
+.t-right { left: calc(max(14px, env(safe-area-inset-left)) + 98px); }
+.t-gas { right: max(14px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); width: 92px; height: 120px; font-size: 20px; }
+.t-brake { right: calc(max(14px, env(safe-area-inset-right)) + 104px); bottom: max(18px, env(safe-area-inset-bottom)); width: 80px; height: 80px; font-size: 17px; }
+.t-hb { right: calc(max(14px, env(safe-area-inset-right)) + 104px); bottom: calc(max(18px, env(safe-area-inset-bottom)) + 92px); width: 80px; height: 56px; font-size: 14px; }
+.t-nitro { right: max(14px, env(safe-area-inset-right)); bottom: calc(max(18px, env(safe-area-inset-bottom)) + 132px); width: 92px; height: 56px; font-size: 15px; color: #7fd6ff !important; }
+.t-small { width: 46px; height: 34px; font-size: 12px !important; border-radius: 8px !important; }
+.t-cam { right: calc(max(12px, env(safe-area-inset-right)) + 120px); top: calc(max(10px, env(safe-area-inset-top))); }
+.t-flare { right: calc(max(12px, env(safe-area-inset-right)) + 172px); top: calc(max(10px, env(safe-area-inset-top))); color: #ff6a5a !important; }
+.t-reset { right: calc(max(12px, env(safe-area-inset-right)) + 120px); top: calc(max(10px, env(safe-area-inset-top)) + 40px); }
+.t-pause { right: calc(max(12px, env(safe-area-inset-right)) + 172px); top: calc(max(10px, env(safe-area-inset-top)) + 40px); }
+.touch-ui .br { top: auto; right: 50%; bottom: max(4px, env(safe-area-inset-bottom)); transform: translateX(50%) scale(0.6); transform-origin: center bottom; }
+.touch-ui .bl { bottom: auto; top: calc(max(14px, env(safe-area-inset-top)) + 118px); width: 170px; gap: 5px; }
+.touch-ui .meter { padding: 5px 8px 6px; }
+.touch-ui .tr { right: max(12px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); }
+.touch-ui #minimap { width: 104px; height: 104px; }
+.touch-ui .sheet { grid-template-columns: auto auto; padding: 5px 9px; }
+.touch-ui .sheet dd { font-size: 13px; }
+.touch-ui .sheet dd.big { font-size: 17px; }
+.touch-ui .sheet dt:nth-of-type(n+3), .touch-ui .sheet dd:nth-of-type(n+3) { display: none; }
+.touch-ui #beastMeter { width: 30vw; }
+.touch-ui #notes { top: auto; bottom: 150px; left: 50%; transform: translateX(-50%) scale(0.8); transform-origin: bottom center; }
+.touch-ui .note:not(.first) { display: none; }
+.touch-ui .hud-btns { display: none; }
+.touch-ui .full-btn { padding: 6px 9px; }
+.touch-ui .full-btn .fl { display: none; }
+.touch-ui .full-btn .fi { font-size: 18px; }
+.touch-ui #toasts { top: 36%; }
+.touch-ui .toast { font-size: 18px; }
+
+@media (max-width: 720px) {
+  .sheet { grid-template-columns: auto auto; padding: 6px 10px; }
+  .sheet dd { font-size: 14px; }
+  .sheet dd.big { font-size: 18px; }
+  #beastMeter { top: calc(max(14px, env(safe-area-inset-top)) + 0px); width: 34vw; }
+  .bm-row { font-size: 11px; }
+  .bm-row b { font-size: 15px; }
+  #minimap { width: 120px; height: 120px; }
+  .br { transform: scale(0.72); transform-origin: right bottom; }
+  .bl { width: 180px; }
+  #notes { top: 30%; transform: scale(0.85); transform-origin: left top; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #center, .toast, .btn-big { transition: none; animation: none; }
+}
+</style>
+</head>
+<body>
+<canvas id="view" tabindex="0" aria-label="Game view"></canvas>
+<div id="vignette"></div>
+
+<div id="loading">
+  <div class="load-card">
+    <div class="load-title">BEAST<span>STAGE</span></div>
+    <div id="loadText">Loading the 3D engine</div>
+    <div class="bar" id="loadBar"><i></i></div>
+  </div>
+</div>
+
+<section id="menu" hidden aria-label="Main menu">
+  <h1 class="title">BEAST<span>STAGE</span></h1>
+  <p class="tag">A jungle rally stage. <b>Something enormous is following your dust.</b> Drive fast, hit the checkpoints, drop flares, and never stop moving.</p>
+  <div class="cta">
+    <button class="btn-big" id="btnEscape">Escape the Beast <small>Enter</small></button>
+    <button class="btn-big alt" id="btnFree">Free Roam <small>no beast</small></button>
+  </div>
+  <div class="opt">
+    <span class="opt-label">Beast</span>
+    <div class="seg"><button data-diff="easy">Easy</button><button data-diff="normal">Normal</button><button data-diff="hard">Hard</button></div>
+  </div>
+  <div class="opt">
+    <span class="opt-label">Driving assists</span>
+    <div class="seg"><button data-assist="full">Full</button><button data-assist="light">Light</button><button data-assist="off">Off</button></div>
+  </div>
+  <div class="opt">
+    <span class="opt-label">Graphics (reloads)</span>
+    <div class="seg"><button data-quality="low">Low</button><button data-quality="medium">Medium</button><button data-quality="high">High</button></div>
+  </div>
+  <div class="keys">
+    <kbd>W A S D / Arrows</kbd><span>Drive · S again to reverse</span>
+    <kbd>Space</kbd><span>Handbrake (hairpins)</span>
+    <kbd>Shift</kbd><span>Nitro · fills from drifts and air</span>
+    <kbd>F</kbd><span>Drop a flare · stuns the beast</span>
+    <kbd>B</kbd><span>Look back</span>
+    <kbd>C</kbd><span>Camera · chase, far, hood, cockpit, bumper</span>
+    <kbd>R</kbd><span>Back on the road</span>
+    <kbd>T · Q / E</kbd><span>Manual gearbox · shift down / up</span>
+    <kbd>V · M · Esc</kbd><span>Co-driver voice · sound · pause</span>
+    <kbd>Gamepad</kbd><span>RT/LT drive · A handbrake · X nitro · B flare · Y camera · LB look back</span>
+  </div>
+  <div class="menu-foot">
+    <button class="chip" id="btnSound">Sound: on</button>
+    <button class="chip" id="btnVoice">Co-driver: on</button>
+    <button class="chip js-full" id="btnFull">⛶ Full screen</button>
+    <span class="best">Best <b id="bestScore">—</b></span>
+  </div>
+</section>
+
+<div id="hud" hidden>
+  <div class="tl">
+    <div class="mode" id="hudMode">ESCAPE</div>
+    <dl class="sheet">
+      <dt>Score</dt><dd class="big" id="hScore">0</dd>
+      <dt>Time</dt><dd id="hTime">0:00.0</dd>
+      <dt>Distance</dt><dd id="hDist">0.00 km</dd>
+      <dt>Checkpoints</dt><dd id="hCp">0</dd>
+    </dl>
+  </div>
+  <div id="beastMeter">
+    <div class="bm-row"><span>The beast</span><b id="bmDist">— m</b></div>
+    <div class="bm-track"><i id="bmFill"></i></div>
+  </div>
+  <div class="tr"><canvas id="minimap" width="180" height="180"></canvas><button class="full-btn js-full" id="btnFull2" aria-label="Full screen"><span class="fi">⛶</span><span class="fl">Full screen</span></button></div>
+  <div id="notes"></div>
+  <div id="toasts"></div>
+  <div id="center" class="center"></div>
+  <div class="bl">
+    <div class="meter"><div class="meter-h"><span>Car</span><b id="hHealthTxt">100%</b></div><div class="bar" id="hHealth"><i></i></div></div>
+    <div class="meter" id="hNitroWrap"><div class="meter-h"><span>Nitro</span><span>Flares</span></div><div class="bar" id="hNitro"><i></i></div><div id="hFlares"></div></div>
+  </div>
+  <div class="br"><canvas id="gauge" width="220" height="220"></canvas></div>
+  <div id="touch">
+    <button class="t-left" data-touch="left" aria-label="Steer left">◀</button>
+    <button class="t-right" data-touch="right" aria-label="Steer right">▶</button>
+    <button class="t-gas" data-touch="gas">GAS</button>
+    <button class="t-brake" data-touch="brake">BRAKE</button>
+    <button class="t-hb" data-touch="handbrake">HAND</button>
+    <button class="t-nitro" data-touch="nitro">NITRO</button>
+    <button class="t-small t-cam" data-tap="camera">CAM</button>
+    <button class="t-small t-flare" data-tap="flare">FLARE</button>
+    <button class="t-small t-reset" data-tap="reset">RESET</button>
+    <button class="t-small t-pause" data-tap="pause">II</button>
+  </div>
+</div>
+
+<div id="pause" class="overlay" hidden>
+  <div class="card">
+    <h2>Paused</h2>
+    <p>The beast is waiting too.</p>
+    <div class="row"><button class="btn-big" id="btnResume">Resume</button></div>
+    <div class="row"><button class="btn-big alt" id="btnRestart">Restart</button><button class="btn-big alt" id="btnMenu">Menu</button></div>
+    <div class="row"><button class="btn-big alt js-full" id="btnFull3">⛶ Full screen</button></div>
+  </div>
+</div>
+
+<div id="over" class="overlay" hidden>
+  <div class="card">
+    <h2 id="overTitle">THE BEAST GOT YOU</h2>
+    <p id="overSub"></p>
+    <dl class="stats">
+      <dt>Survived</dt><dd id="ovTime">0:00.0</dd>
+      <dt>Distance</dt><dd id="ovDist">0 km</dd>
+      <dt>Checkpoints</dt><dd id="ovCp">0</dd>
+      <dt>Top speed</dt><dd id="ovTop">0</dd>
+      <dt>Longest air</dt><dd id="ovAir">0</dd>
+      <dt class="tot">Score</dt><dd class="tot" id="ovScore">0</dd>
+      <dt></dt><dd id="ovBest"></dd>
+    </dl>
+    <div class="row"><button class="btn-big" id="btnAgain">Run again</button><button class="btn-big alt" id="btnOverMenu">Menu</button></div>
+  </div>
+</div>
+
+<noscript><p style="padding:24px">Beast Stage needs JavaScript and WebGL.</p></noscript>
+
+<script>
+// Bootstrap: load three.js from the CDN, then the game scripts in order.
+// Classic scripts (not modules) so the game also runs when opened straight from disk.
+(function () {
+  if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch-ui');
+  var files = ['util', 'textures', 'world', 'terrain', 'flora', 'props', 'car-model', 'vehicle', 'beast', 'fx', 'audio', 'input', 'hud', 'game'];
+  var loadText = document.getElementById('loadText');
+  function fail(msg) { loadText.textContent = msg; loadText.style.color = '#ff7a5a'; }
+  function loadScript(f) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = 'js/' + f + '.js';
+      s.onload = res;
+      s.onerror = function () { rej(new Error('Could not load js/' + f + '.js. This page needs its js folder next to it. To play from a single file, open beast-stage-single.html instead.')); };
+      document.body.appendChild(s);
+    });
+  }
+  window.addEventListener('error', function (e) { if (!window.__bs) fail('Something broke while loading: ' + (e.message || 'unknown error')); });
+  import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js').then(function (T) {
+    window.THREE = T;
+    return files.reduce(function (p, f) { return p.then(function () { return loadScript(f); }); }, Promise.resolve());
+  }, function () {
+    fail('The 3D engine did not load. Check your internet connection, then reload.');
+    throw new Error('three.js failed');
+  }).then(function () {
+    document.getElementById('menu').hidden = true;
+    return document.fonts && document.fonts.ready ? Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 1500); })]) : null;
+  }).then(function () { return BS.boot(); }).catch(function (err) {
+    console.error(err);
+    if (!/three\.js failed/.test(String(err))) fail('Something broke while loading: ' + err.message);
+  });
+})();
+</script>
+</body>
+</html>
