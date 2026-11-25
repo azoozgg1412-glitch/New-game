@@ -46,7 +46,26 @@ There is a Full screen button on the start card and in the control bar.
 
 `crash.html` is a soft-body car crash game for phones and desktop browsers. Open it to play. It loads three.js from a CDN, so it needs an internet connection.
 
-Each car is a lattice of 63 point masses joined by 434 beams. A beam that is pushed past its strain limit takes a permanent set, so dents stay. The crumple zones yield first. The passenger cell is stiff lengthways and weaker sideways, so doors cave in a side impact. Windows crack when the frame around them bends, and wheels come off when their mounts are pushed out of place. The body mesh is deformed on the GPU from the 63 node positions. The physics takes well under a millisecond per frame, so it runs smoothly on phones.
+Each car is a lattice of 63 point masses joined by 434 beams. A beam that is pushed past its strain limit takes a permanent set and gets a little stiffer, so dents stay. The crumple zones yield first. The passenger cell is stiff lengthways and weaker sideways, so doors cave in a side impact. The body mesh is deformed on the GPU from the 63 node positions. The physics takes well under a millisecond per frame, so it runs smoothly on phones.
+
+## The car
+
+The body is built from real panels: hood, trunk lid, front and rear bumpers, four doors with their windows, and two mirrors. It also has wrap-around headlights with LED strips and projectors, tail lamps with a light bar, brake and reverse lights, a grille, fog lamps, plates, exhaust tips, door handles, panel shut-lines and wipers. There is an interior (seats, dashboard, steering wheel) behind tinted glass, and an engine bay under the hood. The wheels have five twin-spoke rims, brake discs and calipers.
+
+Every panel crumples with the body until the area around it is crushed. Then its latch lets go and it becomes a separate piece:
+
+- The hood pops open on its hinges after a hard frontal hit. In a big one it tears off.
+- Doors spring open and swing on their hinges. They stop at the door frame and at full opening, and tear off in a heavy side impact.
+- Bumpers hang from one side, then fall off.
+- Mirrors snap off in hard side hits.
+- Windows shatter, and headlights and tail lamps break.
+- Wheels come off when their mounts are pushed out of place.
+
+Loose parts tumble, slide and can be hit by other cars. Repair puts everything back.
+
+## Graphics
+
+HDR rendering with bloom (lamps, sparks and sun glints glow), filmic tone mapping, a light colour grade and vignette. The paint has a clearcoat, and the reflection map shows sky, ground and buildings. The sky has clouds and the horizon has hills. Cars get contact shadows, crashes throw dust, sparks and debris, and drifting leaves tyre smoke and skid marks. Low quality turns off post-processing and real-time shadows for older phones.
 
 ## The test facility
 
@@ -60,7 +79,7 @@ Each car is a lattice of 63 point masses joined by 434 beams. A beam that is pus
 | Rollover | One-side wedge that tips the car over |
 | Ramp jump | 3 m launch ramp |
 
-Pick a speed from 20 to 200 km/h in Tests. The car is launched at that speed and a slow-motion replay plays after the hit. The facility also has a 55 m ramp up to an 8 m platform, a bigger kicker ramp, three parked cars, cones, water barrels, tyre stacks and jersey barriers.
+Pick a speed from 20 to 200 km/h in Tests. The car is launched at that speed and a slow-motion replay plays after the hit. The facility also has a concrete crash apron, high-speed camera rigs, a 55 m ramp up to an 8 m platform, a bigger kicker ramp, three parked cars, cones, water barrels, tyre stacks, jersey barriers and a fenced perimeter.
 
 ## Controls
 
