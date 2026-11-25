@@ -496,6 +496,9 @@ const FLORA = { cells: [], CS: 256, falling: [], types: {}, mats: {} };
     }
   };
 
+  // model builders, reused by Jungle Dash
+  FLORA.models = { palmModel, canopyModel, midTreeModel, bananaModel, fernModel, bushModel, grassModel, rockModel, makeMaterials };
+
   // knock a tree over, falling away from (fromX, fromZ)
   FLORA.fell = function (o, fromX, fromZ, power = 1) {
     if (!o.alive || o.type !== 'tree') return false;

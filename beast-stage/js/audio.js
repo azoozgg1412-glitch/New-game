@@ -199,6 +199,11 @@ const AUDIO = { ctx: null, on: true, ready: false, volume: 0.8 };
       case 'nitro': burst(800, 'bandpass', 0.6, 0.4 * v, 0.5); tone(200, 900, 'sawtooth', 0.06 * v, 0.4); break;
       case 'heart': tone(60, 40, 'sine', 0.55 * v, 0.12); tone(55, 38, 'sine', 0.42 * v, 0.12, sfx, 0, 0.22); break;
       case 'beep': tone(opt.f || 660, opt.f || 660, 'square', 0.12, 0.15); break;
+      case 'coin': { const f = opt.f || 1320; tone(f, f, 'sine', 0.16 * v, 0.09); tone(f * 1.5, f * 1.5, 'sine', 0.13 * v, 0.16, sfx, 0, 0.06); break; }
+      case 'whoosh': { const f = burst(1400, 'bandpass', 1.2, 0.12 * v, 0.16, sfx, pan); f.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.16); break; }
+      case 'power': tone(400, 1600, 'triangle', 0.14 * v, 0.35); tone(800, 2400, 'sine', 0.08 * v, 0.35, sfx, 0, 0.08); break;
+      case 'shield': tone(900, 300, 'sine', 0.2 * v, 0.4); burst(3000, 'highpass', 0.6, 0.15 * v, 0.3); break;
+      case 'combo': tone(660, 660, 'triangle', 0.12 * v, 0.08); tone(990, 990, 'triangle', 0.12 * v, 0.08, sfx, 0, 0.08); tone(1320, 1320, 'triangle', 0.12 * v, 0.14, sfx, 0, 0.16); break;
       case 'bird': {
         const f = frand(1800, 3800);
         for (let i = 0; i < 3; i++) tone(f, f * frand(0.6, 1.5), 'sine', 0.03, 0.08, sfx, pan, i * 0.11);
